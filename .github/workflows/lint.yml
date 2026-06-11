@@ -12,8 +12,8 @@ jobs:
   golangci:
     strategy:
       matrix:
-        # run on stable and stable - 1 (oldstable) versions
-        go: ['oldstable', 'stable']
+        # run on stable only
+        go: ['stable']
     name: lint
     runs-on: ubuntu-latest
     steps:
