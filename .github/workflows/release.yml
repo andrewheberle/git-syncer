@@ -29,15 +29,6 @@ jobs:
           cache: true
       - uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
       - uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-      - name: Set up build environment
-        run: |
-          sudo dpkg --add-architecture arm64
-          sudo sed -i '/^Types: deb/a Architectures: amd64' /etc/apt/sources.list.d/ubuntu.sources
-          echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports noble main universe" | sudo tee /etc/apt/sources.list.d/arm64-ports.list
-          echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports noble-updates main universe" | sudo tee -a /etc/apt/sources.list.d/arm64-ports.list
-          echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports noble-security main universe" | sudo tee -a /etc/apt/sources.list.d/arm64-ports.list
-          sudo apt-get -qqq update
-          sudo apt-get -qqqy install libpam0g-dev:amd64 libpam0g-dev:arm64 gcc-aarch64-linux-gnu
       - name: Release with GoReleaser
         uses: goreleaser/goreleaser-action@e24998b8b67b290c2fa8b7c14fcfa7de2c5c9b8c # v7.1.0
         with:
@@ -90,7 +81,7 @@ jobs:
             --sign ${{ vars.GPG_KEY_ID }} \
             --codename stable \
             --component main \
-            --prefix pam-ussh \
+            --prefix git-syncer \
             --visibility nil \
             {}
         env:
@@ -100,7 +91,7 @@ jobs:
       - name: Upload public key to apt repo
         run: |
           gpg --armor --export ${{ vars.GPG_KEY_ID }} > pubkey.gpg
-          aws s3 cp pubkey.gpg s3://packages/pam-ussh/pubkey.gpg \
+          aws s3 cp pubkey.gpg s3://packages/git-syncer/pubkey.gpg \
             --endpoint-url https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com \
             --region auto
         env:
