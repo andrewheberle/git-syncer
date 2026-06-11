@@ -1,6 +1,6 @@
 module github.com/andrewheberle/git-syncer
 
-go 1.26.3
+go 1.25.0
 
 require (
 	github.com/go-git/go-git/v6 v6.0.0-alpha.4
