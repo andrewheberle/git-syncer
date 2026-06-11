@@ -274,7 +274,7 @@ func isDirEmpty(path string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to open directory: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Try reading just one entry
 	entries, err := f.Readdirnames(1)
