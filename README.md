@@ -57,6 +57,46 @@ the `origin` remote using HTTP Bearer based authentication with the Bearer
 token being retrieved from the key named `GIT_BEARER_TOKEN` in the Consul KV
 store `https://consul.example.com`
 
+## Installation
+
+### GitHub Releases
+
+```sh
+GIT_SYNCER_VER=0.2.0
+wget https://github.com/andrewheberle/git-syncer/releases/download/v${GIT_SYNCER_VER}/git-syncer_linux_x86_64.tar.gz
+tar -zxf git-syncer_linux_x86_64.tar.gz
+```
+
+#### Verifying a Release
+
+Releases can be verified with `cosign` using the signed checksums file as
+follows:
+
+```sh
+GIT_SYNCER_VER=0.2.0
+# Download checksums and cosign signature data
+wget https://github.com/andrewheberle/git-syncer/releases/download/v${GIT_SYNCER_VER}/checksums.txt
+wget https://github.com/andrewheberle/git-syncer/releases/download/v${GIT_SYNCER_VER}/checksums.txt.sigstore.json
+# Verify signature of checksums.txt file
+cosign verify-blob checksums.txt --bundle checksums.txt.sigstore.json --certificate-identity=https://github.com/andrewheberle/git-syncer/.github/workflows/release.yml@refs/tags/v${GIT_SYNCER_VER} --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+# Download release
+wget https://github.com/andrewheberle/git-syncer/releases/download/v${GIT_SYNCER_VER}/git-syncer_linux_x86_64.tar.gz
+# Verify SHA256 checksum of release
+sha256sum -c --ignore-missing checksums.txt
+tar -zxf git-syncer_linux_x86_64.tar.gz
+```
+
+### APT Package Repository
+
+Packages are available for Debian and Ubuntu and can be installed as follows:
+
+```sh
+curl -fsSL https://packages.hebs.net.au/git-syncer/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/git-syncer.gpg
+echo "deb [signed-by=/usr/share/keyrings/git-syncer.gpg] https://packages.hebs.net.au/git-syncer stable main" | sudo tee /etc/apt/sources.list.d/git-syncer.list
+sudo apt-get update
+sudo apt-get install git-syncer
+```
+
 ## Command Line Options
 
 The complete command line options are below:
