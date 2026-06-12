@@ -18,9 +18,10 @@ var Version = "dev"
 
 func main() {
 	var (
-		repo              string
-		dir               string
-		authType          credential.AuthType
+		gitUrl            string
+		gitWorkdir        string
+		gitRemoteName     string
+		gitAuthType       credential.AuthType
 		interval          time.Duration
 		debug             bool
 		version           bool
@@ -34,9 +35,10 @@ func main() {
 		consulClientCA    string
 	)
 
-	pflag.StringVar(&repo, "git.url", "", "URL of git repository (only required for the initial clone)")
-	pflag.StringVar(&dir, "git.workdir", "", "Directory for the git repository")
-	pflag.Var(&authType, "git.httpauth", "HTTP Authentication type for git operations")
+	pflag.StringVar(&gitUrl, "git.url", "", "URL of git repository (only required for the initial clone)")
+	pflag.StringVar(&gitWorkdir, "git.workdir", "", "Directory for the git repository")
+	pflag.StringVar(&gitRemoteName, "git.remote", "origin", "The git remote name")
+	pflag.Var(&gitAuthType, "git.httpauth", "HTTP Authentication type for git operations")
 	pflag.StringVar(&command, "change.command", "", "Command to run on changes")
 	pflag.StringVar(&filter, "change.filter", ".*", "Filter to limit changes to trigger the configured command (if any)")
 	pflag.DurationVar(&interval, "interval", 0, "Refresh interval")
@@ -44,7 +46,7 @@ func main() {
 	pflag.BoolVar(&version, "version", false, "Show version and exit")
 	pflag.StringVar(&consulAddr, "consul.addr", "", "Address of Consul KV store")
 	pflag.StringVar(&consulUsernameKey, "consul.git.user", "", "Consul key that holds git username")
-	pflag.StringVar(&consulPasswordKey, "consul.git.password", "", "Consul key that holds git password")
+	pflag.StringVar(&consulPasswordKey, "consul.git.password", "", "Consul key that holds git password or SSH key")
 	pflag.StringVar(&consulClientCert, "consul.cert", "", "Client certificate for Consul authentication")
 	pflag.StringVar(&consulClientKey, "consul.key", "", "Client key for Consul authentication")
 	pflag.StringVar(&consulClientCA, "consul.ca", "", "CA to verify connection to Consul")
@@ -62,7 +64,7 @@ func main() {
 		}),
 	).With(
 		"interval", interval,
-		slog.Group("git", "url", repo, "workdir", dir),
+		slog.Group("git", "url", gitUrl, "workdir", gitWorkdir, "remote", gitRemoteName),
 		slog.Group("change", "command", command, "filter", filter),
 	)
 
@@ -88,7 +90,7 @@ func main() {
 		consulOpts := []consul.Option{
 			consul.WithLogger(logger.WithGroup("consul")),
 			consul.WithPasswordKey(consulPasswordKey),
-			consul.WithHTTPAuth(authType),
+			consul.WithHTTPAuth(gitAuthType),
 		}
 
 		if consulUsernameKey != "" {
@@ -110,7 +112,7 @@ func main() {
 		opts = append(opts, syncer.WithHTTPAuth(fetcher))
 	}
 
-	s, err := syncer.New(repo, dir, opts...)
+	s, err := syncer.New(gitUrl, gitWorkdir, opts...)
 	if err != nil {
 		logger.Error("error setting up syncer", "error", err)
 		os.Exit(1)
