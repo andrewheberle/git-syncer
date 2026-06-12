@@ -7,6 +7,7 @@ require (
 	github.com/hashicorp/consul/api/v2 v2.0.0
 	github.com/oklog/run v1.2.0
 	github.com/spf13/pflag v1.0.10
+	golang.org/x/crypto v0.51.0
 )
 
 require (
@@ -37,7 +38,6 @@ require (
 	github.com/pjbgf/sha1cd v0.6.0 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect

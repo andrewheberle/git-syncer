@@ -25,6 +25,7 @@ type Syncer struct {
 	commandString string
 	filterString  string
 	gitOptions    []client.Option
+	gitRemoteName string
 
 	command  *exec.Cmd
 	filter   *regexp.Regexp
@@ -36,11 +37,12 @@ type Syncer struct {
 
 func New(repo, dir string, opts ...SyncerOption) (*Syncer, error) {
 	s := &Syncer{
-		dir:          dir,
-		logger:       slog.New(slog.DiscardHandler),
-		interval:     0,
-		filterString: ".*",
-		gitOptions:   make([]client.Option, 0),
+		dir:           dir,
+		logger:        slog.New(slog.DiscardHandler),
+		interval:      0,
+		filterString:  ".*",
+		gitOptions:    make([]client.Option, 0),
+		gitRemoteName: "origin",
 	}
 
 	// set up context to cancel any operations in progress on shutdown
@@ -52,6 +54,10 @@ func New(repo, dir string, opts ...SyncerOption) (*Syncer, error) {
 
 	r, err := s.openOrClone(repo)
 	if err != nil {
+		if errors.Is(err, git.ErrRepositoryNotExists) {
+			return nil, fmt.Errorf("could not open repository: %s did not contain a valid repository: %w", s.dir, err)
+		}
+
 		return nil, fmt.Errorf("could not open repository: %w", err)
 	}
 	s.logger.Info("opened git repository")
@@ -134,7 +140,10 @@ func (s *Syncer) run() error {
 
 	s.logger.Debug("starting pull", "ref", cur.Hash().String())
 
-	opts := &git.PullOptions{ClientOptions: s.gitOptions}
+	opts := &git.PullOptions{
+		RemoteName:    s.gitRemoteName,
+		ClientOptions: s.gitOptions,
+	}
 	if err := opts.Validate(); err != nil {
 		return fmt.Errorf("git options validation error: %w", err)
 	}
@@ -210,6 +219,7 @@ func (s *Syncer) clone(repo string) (*git.Repository, error) {
 	opts := &git.CloneOptions{
 		URL:           repo,
 		ClientOptions: s.gitOptions,
+		RemoteName:    s.gitRemoteName,
 	}
 	if err := opts.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid clone options: %w", err)

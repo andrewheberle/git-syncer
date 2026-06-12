@@ -1,23 +1,30 @@
-package credential
+package consul
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/andrewheberle/git-syncer/internal/pkg/credential"
+	"github.com/go-git/go-git/v6/plumbing/transport"
 	"github.com/hashicorp/consul/api/v2"
+	"golang.org/x/crypto/ssh"
 )
 
-type ConsulFetcher struct {
-	clientCert      string
-	clientKey       string
-	clientCaKeys    string
-	httpUserKey     string
-	httpPasswordKey string
-	logger          *slog.Logger
-	ttl             time.Duration
+type Fetcher struct {
+	clientCert         string
+	clientKey          string
+	clientCaKeys       string
+	httpUserKey        string
+	httpPasswordKey    string
+	auth               string
+	logger             *slog.Logger
+	ttl                time.Duration
+	sshHostKeyCallback ssh.HostKeyCallback
 
 	client   *api.KV
 	mu       sync.Mutex
@@ -26,12 +33,11 @@ type ConsulFetcher struct {
 	expiry   time.Time
 }
 
-var _ Fetcher = &ConsulFetcher{}
-
-func NewConsul(addr string, opts ...ConsulFetcherOption) (*ConsulFetcher, error) {
-	f := &ConsulFetcher{
+func New(addr string, opts ...Option) (*Fetcher, error) {
+	f := &Fetcher{
 		logger: slog.New(slog.DiscardHandler),
 		ttl:    time.Minute * 5,
+		auth:   credential.BasicAuth,
 	}
 
 	for _, o := range opts {
@@ -67,18 +73,47 @@ func NewConsul(addr string, opts ...ConsulFetcherOption) (*ConsulFetcher, error)
 	return f, nil
 }
 
-func (f *ConsulFetcher) Authorizer(r *http.Request) error {
+func (f *Fetcher) Authorizer(r *http.Request) error {
 	username, password, err := f.fetchCredentials()
 	if err != nil {
 		return err
 	}
 
-	r.SetBasicAuth(username, password)
+	if f.auth == credential.BasicAuth {
+		r.SetBasicAuth(username, password)
+	} else {
+		r.Header.Set("Authorization", "Bearer "+password)
+	}
 
 	return nil
 }
 
-func (f *ConsulFetcher) fetchCredentials() (username, password string, err error) {
+var ErrNoHostKeyCallbackSet = errors.New("a host key callback must be set")
+
+func (f *Fetcher) ClientConfig(context.Context, *transport.Request) (*ssh.ClientConfig, error) {
+	if f.sshHostKeyCallback == nil {
+		return nil, ErrNoHostKeyCallbackSet
+	}
+
+	_, password, err := f.fetchCredentials()
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := ssh.ParsePrivateKey([]byte(password))
+	if err != nil {
+		return nil, err
+	}
+
+	return &ssh.ClientConfig{
+		HostKeyCallback: f.sshHostKeyCallback,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+	}, nil
+}
+
+func (f *Fetcher) fetchCredentials() (username, password string, err error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -117,32 +152,4 @@ func (f *ConsulFetcher) fetchCredentials() (username, password string, err error
 	f.expiry = time.Now().Add(f.ttl)
 
 	return username, password, nil
-}
-
-type ConsulFetcherOption func(*ConsulFetcher)
-
-func WithHTTPKeys(userkey, passwordkey string) ConsulFetcherOption {
-	return func(f *ConsulFetcher) {
-		f.httpUserKey = userkey
-		f.httpPasswordKey = passwordkey
-	}
-}
-
-func WithClientTLS(cert, key string) ConsulFetcherOption {
-	return func(f *ConsulFetcher) {
-		f.clientCert = cert
-		f.clientKey = key
-	}
-}
-
-func WithClientCA(ca string) ConsulFetcherOption {
-	return func(f *ConsulFetcher) {
-		f.clientCaKeys = ca
-	}
-}
-
-func WithLogger(logger *slog.Logger) ConsulFetcherOption {
-	return func(f *ConsulFetcher) {
-		f.logger = logger
-	}
 }

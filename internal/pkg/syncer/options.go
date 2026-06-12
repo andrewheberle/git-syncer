@@ -44,3 +44,9 @@ func WithHTTPAuth(auth client.HTTPAuth) SyncerOption {
 		s.gitOptions = append(s.gitOptions, client.WithHTTPAuth(auth))
 	}
 }
+
+func WithRemoteName(remote string) SyncerOption {
+	return func(s *Syncer) {
+		s.gitRemoteName = remote
+	}
+}
