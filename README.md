@@ -10,7 +10,12 @@ and less generic as far as:
 3. The reload command will only be run if the filter (a regexp) matches the
 	changed files
 
+## Status
+
 This is very early days so there are likely a lot of bugs here.
+
+At this time, testing has focused exclusively on HTTP remotes, so despite the options
+being available to support SSH remotes, this is totally untested.
 
 ## Usage
 
