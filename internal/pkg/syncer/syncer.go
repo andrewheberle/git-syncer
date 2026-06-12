@@ -52,6 +52,10 @@ func New(repo, dir string, opts ...SyncerOption) (*Syncer, error) {
 
 	r, err := s.openOrClone(repo)
 	if err != nil {
+		if errors.Is(err, git.ErrRepositoryNotExists) {
+			return nil, fmt.Errorf("could not open repository: %s did not contain a valid repository: %w", s.dir, err)
+		}
+
 		return nil, fmt.Errorf("could not open repository: %w", err)
 	}
 	s.logger.Info("opened git repository")

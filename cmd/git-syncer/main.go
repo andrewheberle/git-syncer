@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/andrewheberle/git-syncer/internal/pkg/credential"
+	"github.com/andrewheberle/git-syncer/internal/pkg/credential/consul"
 	"github.com/andrewheberle/git-syncer/internal/pkg/syncer"
 	"github.com/oklog/run"
 	"github.com/spf13/pflag"
@@ -19,6 +20,7 @@ func main() {
 	var (
 		repo              string
 		dir               string
+		authType          credential.AuthType
 		interval          time.Duration
 		debug             bool
 		version           bool
@@ -34,8 +36,9 @@ func main() {
 
 	pflag.StringVar(&repo, "git.url", "", "URL of git repository (only required for the initial clone)")
 	pflag.StringVar(&dir, "git.workdir", "", "Directory for the git repository")
+	pflag.Var(&authType, "git.httpauth", "HTTP Authentication type for git operations")
 	pflag.StringVar(&command, "change.command", "", "Command to run on changes")
-	pflag.StringVar(&filter, "change.filter", ".*", "Filter to allow only some changes to trigger the configured command (if any)")
+	pflag.StringVar(&filter, "change.filter", ".*", "Filter to limit changes to trigger the configured command (if any)")
 	pflag.DurationVar(&interval, "interval", 0, "Refresh interval")
 	pflag.BoolVar(&debug, "debug", false, "Enable debug logging")
 	pflag.BoolVar(&version, "version", false, "Show version and exit")
@@ -82,19 +85,23 @@ func main() {
 
 		logger.Debug("keys set for username and password", "username", consulUsernameKey, "password", consulPasswordKey)
 
-		consulOpts := []credential.ConsulFetcherOption{
-			credential.WithHTTPKeys(consulUsernameKey, consulPasswordKey),
-			credential.WithLogger(logger.WithGroup("consul")),
+		consulOpts := []consul.Option{
+			consul.WithLogger(logger.WithGroup("consul")),
+			consul.WithPasswordKey(consulPasswordKey),
+			consul.WithHTTPAuth(authType),
 		}
 
+		if consulUsernameKey != "" {
+			consulOpts = append(consulOpts, consul.WithUserKey(consulUsernameKey))
+		}
 		if consulClientCA != "" {
-			consulOpts = append(consulOpts, credential.WithClientCA(consulClientCA))
+			consulOpts = append(consulOpts, consul.WithClientCA(consulClientCA))
 		}
 		if consulClientCert != "" && consulClientKey != "" {
-			consulOpts = append(consulOpts, credential.WithClientTLS(consulClientCert, consulClientKey))
+			consulOpts = append(consulOpts, consul.WithClientTLS(consulClientCert, consulClientKey))
 		}
 
-		fetcher, err := credential.NewConsul(consulAddr, consulOpts...)
+		fetcher, err := consul.New(consulAddr, consulOpts...)
 		if err != nil {
 			logger.Error("could not set up fetcher", "error", err)
 			os.Exit(1)
