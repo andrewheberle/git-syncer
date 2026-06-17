@@ -41,7 +41,7 @@ func main() {
 	pflag.StringVar(&gitWorkdir, "git.workdir", "", "Directory for the git repository")
 	pflag.StringVar(&gitRemoteName, "git.remote", "origin", "The git remote name")
 	pflag.Var(&gitAuthType, "git.http.auth", "HTTP Authentication type for git operations")
-	pflag.StringVar(&gitSshKnownHosts, "git.ssh.auth", "", "Path to known_hosts file to verify SSH host keys (required for private SSH remotes)")
+	pflag.StringVar(&gitSshKnownHosts, "git.ssh.knownhosts", "", "Path to known_hosts file to verify SSH host keys (required for private SSH remotes)")
 	pflag.StringVar(&command, "change.command", "", "Command to run on changes")
 	pflag.StringVar(&filter, "change.filter", ".*", "Filter to limit changes to trigger the configured command (if any)")
 	pflag.DurationVar(&interval, "interval", 0, "Refresh interval")
