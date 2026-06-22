@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -20,10 +21,6 @@ import (
 var Version = "dev"
 
 func main() {
-	var (
-		k = koanf.New(".")
-	)
-
 	f := pflag.NewFlagSet("config", pflag.ContinueOnError)
 	f.String("config", "", "Path to configuration file")
 	f.String("git.url", "", "URL of git repository (only required for the initial clone)")
@@ -42,7 +39,14 @@ func main() {
 	f.String("consul.cert", "", "Client certificate for Consul authentication")
 	f.String("consul.key", "", "Client key for Consul authentication")
 	f.String("consul.ca", "", "CA to verify connection to Consul")
-	f.Parse(os.Args[1:])
+
+	// parse command line
+	if err := f.Parse(os.Args[1:]); err != nil {
+		if !errors.Is(err, pflag.ErrHelp) {
+			fmt.Fprintf(os.Stderr, "error parsing command line flags: %s\n", err)
+			os.Exit(1)
+		}
+	}
 
 	// handle if version was requested
 	if version, err := f.GetBool("version"); err == nil && version {
@@ -51,6 +55,7 @@ func main() {
 	}
 
 	// load any config file
+	k := koanf.New(".")
 	if config, err := f.GetString("config"); err != nil {
 		fmt.Fprintf(os.Stderr, "error getting flag value: %s\n", err)
 		os.Exit(1)

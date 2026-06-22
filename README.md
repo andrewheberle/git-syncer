@@ -62,7 +62,7 @@ store `https://consul.example.com`
 ### GitHub Releases
 
 ```sh
-GIT_SYNCER_VER=0.2.0
+GIT_SYNCER_VER=0.2.2
 wget https://github.com/andrewheberle/git-syncer/releases/download/v${GIT_SYNCER_VER}/git-syncer_linux_x86_64.tar.gz
 tar -zxf git-syncer_linux_x86_64.tar.gz
 ```
@@ -73,7 +73,7 @@ Releases can be verified with `cosign` using the signed checksums file as
 follows:
 
 ```sh
-GIT_SYNCER_VER=0.2.0
+GIT_SYNCER_VER=0.2.2
 # Download checksums and cosign signature data
 wget https://github.com/andrewheberle/git-syncer/releases/download/v${GIT_SYNCER_VER}/checksums.txt
 wget https://github.com/andrewheberle/git-syncer/releases/download/v${GIT_SYNCER_VER}/checksums.txt.sigstore.json
@@ -136,14 +136,14 @@ consul:
   cert: /path/to/client.crt
   key: /path/to/client.key
   git:
-	password: /git/password/key
-	user: /git/user/key
+    password: /git/password/key
+    user: /git/user/key
 debug: false
 git:
   http:
-	auth: basic
+    auth: basic
   ssh:
-	knownhosts: /path/to/.ssh/known_hosts
+    knownhosts: /path/to/.ssh/known_hosts
   remote: origin
   url: https://git.example.com/user/repo.git
   workdir: /path/to/workdir
