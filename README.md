@@ -105,6 +105,7 @@ The complete command line options are below:
 |--|--|--|--|
 | `--change.command` | string |  | Command to run on changes |
 | `--change.filter` | string | `.*` | Filter to limit changes to trigger the configured command (if any) |
+| `--config` | string |  | Path to configuration file |
 | `--consul.addr` | string |  | Address of Consul KV store |
 | `--consul.ca` | string |  | CA to verify connection to Consul |
 | `--consul.cert` | string |  | Client certificate for Consul authentication |
@@ -119,3 +120,35 @@ The complete command line options are below:
 | `--git.workdir` | string | | Directory for the git repository |
 | `--interval` | duration |  | Refresh interval |
 | `--version` |  |  | Show version and exit |
+
+## Configuration
+
+All command line options can be provided via a YAML based configuration file
+provided by the `--config` option as the following example shows:
+
+```yaml
+change:
+  command: systemctl reload myservice
+  filter: .*
+consul:
+  addr: https://consul.example.com
+  ca: /path/to/ca.pem
+  cert: /path/to/client.crt
+  key: /path/to/client.key
+  git:
+	password: /git/password/key
+	user: /git/user/key
+debug: false
+git:
+  http:
+	auth: basic
+  ssh:
+	knownhosts: /path/to/.ssh/known_hosts
+  remote: origin
+  url: https://git.example.com/user/repo.git
+  workdir: /path/to/workdir
+interval: 15m
+```
+
+Please note that provided command line options will override and options
+provided in the configuration file.

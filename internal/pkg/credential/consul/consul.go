@@ -44,6 +44,10 @@ func New(addr string, opts ...Option) (*Fetcher, error) {
 		o(f)
 	}
 
+	if f.auth != credential.BasicAuth && f.auth != credential.BearerAuth {
+		return nil, fmt.Errorf("invalid auth type: %s", f.auth)
+	}
+
 	f.logger = f.logger.With("addr", addr, "userkey", f.httpUserKey, "passwordkey", f.httpPasswordKey)
 
 	tlsConfig := api.TLSConfig{}
