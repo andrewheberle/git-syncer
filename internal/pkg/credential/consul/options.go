@@ -3,7 +3,6 @@ package consul
 import (
 	"log/slog"
 
-	"github.com/andrewheberle/git-syncer/internal/pkg/credential"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -21,9 +20,9 @@ func WithPasswordKey(key string) Option {
 	}
 }
 
-func WithHTTPAuth(auth credential.AuthType) Option {
+func WithHTTPAuth(auth string) Option {
 	return func(f *Fetcher) {
-		f.auth = auth.String()
+		f.auth = auth
 	}
 }
 
