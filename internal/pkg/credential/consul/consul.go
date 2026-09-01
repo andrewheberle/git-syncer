@@ -111,6 +111,7 @@ func (f *Fetcher) ClientConfig(context.Context, *transport.Request) (*ssh.Client
 
 	return &ssh.ClientConfig{
 		HostKeyCallback: f.sshHostKeyCallback,
+		User:            "git",
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(key),
 		},
