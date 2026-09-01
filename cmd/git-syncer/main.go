@@ -21,7 +21,7 @@ import (
 var Version = "dev"
 
 func main() {
-	f := pflag.NewFlagSet("config", pflag.ContinueOnError)
+	f := pflag.NewFlagSet("git-syncer", pflag.ContinueOnError)
 	f.String("config", "", "Path to configuration file")
 	f.String("git.url", "", "URL of git repository (only required for the initial clone)")
 	f.String("git.workdir", "", "Directory for the git repository")
@@ -45,6 +45,8 @@ func main() {
 		if !errors.Is(err, pflag.ErrHelp) {
 			fmt.Fprintf(os.Stderr, "error parsing command line flags: %s\n", err)
 			os.Exit(1)
+		} else {
+			os.Exit(0)
 		}
 	}
 
