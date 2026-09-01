@@ -144,7 +144,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		opts = append(opts, syncer.WithHTTPAuth(fetcher))
+		opts = append(opts, syncer.WithHTTPAuth(fetcher), syncer.WithSSHAuth(fetcher))
 	}
 
 	s, err := syncer.New(k.String("git.url"), k.String("git.workdir"), opts...)
