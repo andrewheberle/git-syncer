@@ -11,7 +11,7 @@ require (
 	github.com/knadh/koanf/v2 v2.3.6
 	github.com/oklog/run v1.2.0
 	github.com/spf13/pflag v1.0.10
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 )
 
 require (
